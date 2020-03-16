@@ -8,13 +8,19 @@ import {
 import { ProcessInfo } from "../../common/types";
 
 export const cardIcon = (item: ProcessInfo) => {
-  if (!!item.ERRORS && item.ERRORS > 0) return faTimesCircle;
-  if (item.PENDING > 0) return faExclamationTriangle;
+  if (item.stalled > 0) return faTimesCircle;
+  if (!!item.errors && item.errors > 0) return faExclamationTriangle;
   return faCheckCircle;
 };
 
 export const cardColor = (item: ProcessInfo) => {
-  if (!!item.ERRORS && item.ERRORS > 0) return "#c80000";
-  if (item.PENDING > 0) return "#dcca00";
+  if (item.stalled > 0) return "#c80000";
+  if (!!item.errors && item.errors > 0) return "#dcca00";
   return "#00c800";
+};
+
+export const cardBorderColor = (item: ProcessInfo) => {
+  if (item.stalled > 0) return "danger";
+  if (!!item.errors && item.errors > 0) return "warning";
+  return "success";
 };

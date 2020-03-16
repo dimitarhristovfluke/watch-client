@@ -1,7 +1,7 @@
 import React from "react";
 import * as R from "ramda";
 import { ProcDefType } from "../../db/definitions";
-import G from "../../config/globals";
+import "../../env";
 import { ProcdefCard } from "./card";
 
 interface ProcsdefProps {
@@ -24,7 +24,7 @@ export class Procmon extends React.Component<ProcsdefProps, ProcsdefState> {
   }
 
   componentDidMount() {
-    fetch("/api/procmon")
+    fetch(`${process.env.API_ROOT_PATH}/procmon`)
       .then(res => res.json())
       .then(
         result => {
@@ -50,14 +50,17 @@ export class Procmon extends React.Component<ProcsdefProps, ProcsdefState> {
   }
 
   cardsElements = (items: ProcDefType[]) => {
-    const servers = R.keys(R.groupBy(i => i.CSERVERID, items));
+    const servers = R.keys(R.groupBy(i => i.cserverid, items));
     const cards = servers.map(serverId => {
       return (
         <div>
           <div>{serverId}</div>
           <div>
             {items.map(item => (
-              <ProcdefCard item={item} dateFormat={G.dateTimeFormat} />
+              <ProcdefCard
+                item={item}
+                dateFormat={process.env.dateTimeFormat}
+              />
             ))}
           </div>
         </div>

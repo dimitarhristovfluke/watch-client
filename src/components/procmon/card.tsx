@@ -21,25 +21,29 @@ export const ProcdefCard = ({ item, dateFormat }: PropType) => {
             size="lg"
           />
           &nbsp;
-          {item.TASKDESC}
+          {item.taskdesc}
         </Card.Title>
-        <Card.Text>{item.PROCNAME}</Card.Text>
+        <Card.Text>{item.procname}</Card.Text>
       </Card.Body>
       <ListGroup className="list-group-flush">
         <ListGroupItem>
           <b>
-            {item.PROCCOUNT} / {item.PROCMIN}
+            {item.proccount} / {item.procmin}
           </b>
           &nbsp; running tasks
         </ListGroupItem>
         <ListGroupItem>
           Last check:
-          <Moment format={dateFormat}>{item.LASTCHECK}</Moment> Is Alive?
-          {isAlive(item.LASTCHECK, 60) ? "Yes" : "No"}
+          <Moment format={dateFormat}>{item.lastcheck}</Moment> Is Alive?
+          {isAlive(item.lastcheck, 60) ? "Yes" : "No"}
         </ListGroupItem>
       </ListGroup>
       <Card.Body>
-        <Card.Link href={"procdef/" + item.PROCDEFID}>Details</Card.Link>
+        <Card.Link
+          href={`${process.env.CLIENT_ROOT_PATH}/procdef/${item.procdefid}`}
+        >
+          Details
+        </Card.Link>
       </Card.Body>
     </Card>
   );

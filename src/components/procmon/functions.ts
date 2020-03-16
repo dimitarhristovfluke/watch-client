@@ -16,19 +16,19 @@ export const isAlive = (lastCheck: Date, validityFor: number = 60) =>
     .valueOf();
 
 export const getProcMonItems = (items: ProcDefType[]) =>
-  items.filter(r => r.PROCNAME === "PROCMON");
+  items.filter(r => r.procname === "PROCMON");
 
 export const getProcMonItem = (items: ProcDefType[], serverId: string) =>
-  items.find(r => r.PROCNAME === "PROCMON" && r.CSERVERID === serverId);
+  items.find(r => r.procname === "PROCMON" && r.cserverid === serverId);
 
 export const isProcMonAlive = (items: ProcDefType[], serverId: string) =>
-  isAlive(getProcMonItem(items, serverId).LASTCHECK);
+  isAlive(getProcMonItem(items, serverId).lastcheck);
 
 export const isProcMon = (item: ProcDefType) =>
-  item && item.PROCNAME === "PROCMON";
+  item && item.procname === "PROCMON";
 
 export const cardIcon = (item: ProcDefType) =>
-  isAlive(item.LASTCHECK) ? faCheckCircle : faTimesCircle;
+  isAlive(item.lastcheck) ? faCheckCircle : faTimesCircle;
 
 export const cardColor = (item: ProcDefType) =>
-  isAlive(item.LASTCHECK) ? "green" : "red";
+  isAlive(item.lastcheck) ? "green" : "red";

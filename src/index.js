@@ -8,8 +8,10 @@ import App from "./App";
 
 const history = createBrowserHistory();
 
+// "/appwatcher/client"
+
 ReactDOM.render(
-  <BrowserRouter history={history}>
+  <BrowserRouter history={history} basename={process.env.CLIENT_ROOT_PATH}>
     <App />
   </BrowserRouter>,
   document.getElementById("root")

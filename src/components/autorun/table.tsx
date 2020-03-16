@@ -5,8 +5,8 @@ import * as R from "ramda";
 import { Link } from "react-router-dom";
 
 import { EmaintAutoType } from "../../db/definitions";
-import G from "../../config/globals";
 import { List, getStatusIcon, getInterval } from "./functions";
+import { properCase } from "../../common/functions";
 
 interface AutorunTableProps {
   match: {
@@ -34,15 +34,13 @@ export class AutorunTable extends React.Component<
       match: { params }
     } = this.props;
 
-    fetch(`/api/autorun/${params.table}`)
+    fetch(`${process.env.API_ROOT_PATH}/autorun/${params.table}`)
       .then<EmaintAutoType[]>(res => res.json())
       .then(
         result => {
-          const sortedResults = R.sortBy(item => item.DNEXTRUN, result);
-
           this.setState({
             isLoaded: true,
-            items: sortedResults
+            items: result
           });
         },
         // Note: it's important to handle errors here
@@ -77,31 +75,37 @@ export class AutorunTable extends React.Component<
         <React.Fragment>
           <Table bordered hover responsive>
             <tr>
-              <th></th>
+              <th>Status</th>
               <th>Process ID</th>
               <th>Description</th>
               <th>Last Run</th>
               <th>Next Run</th>
               <th>Run Inteval</th>
-              <th>Status</th>
+              <th>Last Error Message</th>
             </tr>
             {items.map(item => (
               <tr>
-                <td>{getStatusIcon(item.STATUS)}</td>
                 <td>
-                  <Link to={`/autorun/${params.table}/${item.CAUTOID}`}>
-                    {item.CAUTOID}
+                  {getStatusIcon(item.status)} {properCase(item.status)}
+                </td>
+                <td>
+                  <Link to={`/autorun/${params.table}/${item.cautoid}`}>
+                    {item.cautoid}
                   </Link>
                 </td>
-                <td>{item.CDESCRIP}</td>
+                <td>{item.cdescrip}</td>
                 <td>
-                  <Moment format={G.dateTimeFormat}>{item.DLASTRUN}</Moment>
+                  <Moment format={process.env.dateTimeFormat}>
+                    {item.dlastrun}
+                  </Moment>
                 </td>
                 <td>
-                  <Moment format={G.dateTimeFormat}>{item.DNEXTRUN}</Moment>
+                  <Moment format={process.env.dateTimeFormat}>
+                    {item.dnextrun}
+                  </Moment>
                 </td>
-                <td>{getInterval(item.NEVERY, item.CINTERVAL)}</td>
-                <td>{item.STATUS}</td>
+                <td>{getInterval(item.nevery, item.cinterval)}</td>
+                <td>{item.message}</td>
               </tr>
             ))}
           </Table>

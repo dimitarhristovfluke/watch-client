@@ -5,9 +5,17 @@ const ROOT_DIR = process.cwd();
 const BUILD_DIR = path.resolve(ROOT_DIR, "dist");
 const SRC_DIR = path.resolve(ROOT_DIR, "src");
 const proxy = require("proxy-middleware");
-const env = require("dotenv");
 
-env.config();
+const webpack = require("webpack");
+const dotenv = require("dotenv");
+
+const env = dotenv.config().parsed;
+
+// reduce it to a nice object, the same as before
+const envKeys = Object.keys(env).reduce((prev, next) => {
+  prev[`process.env.${next}`] = JSON.stringify(env[next]);
+  return prev;
+}, {});
 
 const backend = process.env.SERVER_URL; // "http://localhost:9999";
 
@@ -73,6 +81,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       hash: true,
       template: path.resolve(__dirname, "src", "index.html")
-    })
-  ]
+    }),
+    new webpack.DefinePlugin(envKeys)
+  ],
+  node: {
+    fs: "empty"
+  }
 };

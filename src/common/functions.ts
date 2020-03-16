@@ -1,7 +1,6 @@
 import Moment from "moment";
 import "moment-timezone";
-
-import G from "../config/globals";
+import "../env";
 
 const isOlderThan = (date: Date, seconds: number) =>
   Moment(toCurrentTimeZone(date))
@@ -27,7 +26,10 @@ export const isFiveMinAgo = (date: Date) => !date || isOlderThan(date, 300);
 export const isPastDate = (date: Date) => !date || isOlderThan(date, 1);
 export const clientZoneOffset = Moment.parseZone(new Date()).utcOffset();
 export const toCurrentTimeZone = (date: Date) =>
-  Moment(date).add(-G.serverZoneOffset + clientZoneOffset, "minutes");
+  Moment(date).add(
+    process.env.SERVER_ZONE_OFFSET + clientZoneOffset,
+    "minutes"
+  );
 
 export const properCase = function(s: string) {
   return s.replace(/\w\S*/g, function(txt) {

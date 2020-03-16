@@ -1,10 +1,12 @@
 export interface ProcessInfo {
-  PROCESSID: string;
-  PNAME: string;
-  PENDING: number;
-  ERRORS?: number;
-  COUNT?: number;
-  LASTCHECK?: Date;
-  DETAILSURL: string;
-  CSERVERID?: string;
+  processid: string;
+  pname: string;
+  pending: number;
+  errors?: number;
+  success?: number;
+  count?: number;
+  lastcheck?: Date;
+  detailsurl: string;
+  cserverid?: string;
+  stalled?: number;
 }

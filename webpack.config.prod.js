@@ -5,9 +5,17 @@ const fs = require("fs");
 const ROOT_DIR = process.cwd();
 const BUILD_DIR = path.resolve(ROOT_DIR, "dist");
 const proxy = require("proxy-middleware");
-const env = require("dotenv");
 
-env.config();
+const webpack = require("webpack");
+const dotenv = require("dotenv");
+
+const env = dotenv.config().parsed;
+
+// reduce it to a nice object, the same as before
+const envKeys = Object.keys(env).reduce((prev, next) => {
+  prev[`process.env.${next}`] = JSON.stringify(env[next]);
+  return prev;
+}, {});
 
 const backend = process.env.SERVER_URL;
 
@@ -33,7 +41,7 @@ module.exports = {
     path: path.resolve(__dirname, "dist"),
     // the filename of the JS bundle will be bundle.js
     filename: "bundle.js",
-    publicPath: "/"
+    publicPath: process.env.CLIENT_ROOT_PATH
   },
   watch: false,
   devServer: {
@@ -70,16 +78,20 @@ module.exports = {
         exclude: /node_modules/,
         include: [path.resolve(__dirname, "./src")],
         use: "awesome-typescript-loader"
+      },
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"]
       }
     ]
   },
   resolve: {
     extensions: ["*", ".js", ".jsx", ".ts", ".tsx"]
   },
-  optimization: {
+  /*optimization: {
     minimize: true,
     minimizer: [minimizePlugin]
-  },
+  },*/
 
   performance: {
     // NEVER increase these configs. code split instead!
@@ -93,6 +105,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       hash: true,
       template: path.resolve(__dirname, "src", "index.html")
-    })
-  ]
+    }),
+    new webpack.DefinePlugin(envKeys)
+  ],
+  node: {
+    fs: "empty"
+  }
 };

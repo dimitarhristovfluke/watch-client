@@ -1,6 +1,6 @@
 import React from "react";
 import { ProcessInfo } from "../../common/types";
-import G from "../../config/globals";
+import "../../env";
 import { DashboardCard } from "./card";
 
 interface DashboardProps {
@@ -9,43 +9,49 @@ interface DashboardProps {
 interface DashboardState {
   error: any;
   isLoaded: boolean;
-  refreshHandler: number;
   items: ProcessInfo[];
 }
 
 export class Dashboard extends React.Component<DashboardProps, DashboardState> {
+  handleInterval = 0;
+
   constructor(props: DashboardProps) {
     super(props);
     this.state = {
       error: null,
       isLoaded: false,
-      refreshHandler: undefined,
       items: []
     };
+
+    this.handleInterval = undefined;
   }
 
   componentDidMount() {
     this.fetchData();
-    const refreshHandler = window.setInterval(this.fetchData, 60000);
-    this.setState({ refreshHandler });
+    this.handleInterval = window.setInterval(this.fetchData, 10000);
   }
 
   componentWillUnmount() {
-    clearInterval(this.state.refreshHandler);
+    clearInterval(this.handleInterval);
   }
 
   cardsElements = (items: ProcessInfo[]) => {
     return items.map((item, idx) => (
-      <DashboardCard item={item} dateFormat={G.dateTimeFormat} key={idx} />
+      <DashboardCard
+        item={item}
+        dateFormat={process.env.dateTimeFormat}
+        key={idx}
+      />
     ));
   };
 
-  fetchData() {
-    fetch("/api/dashboard")
+  fetchData = () => {
+    const self = this;
+    fetch(`${process.env.API_ROOT_PATH}/dashboard`, { cache: "no-store" })
       .then(res => res.json())
       .then(
         result => {
-          this.setState({
+          self.setState({
             isLoaded: true,
             items: result
           });
@@ -60,7 +66,7 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
           });
         }
       );
-  }
+  };
 
   render() {
     const { error, isLoaded, items } = this.state;

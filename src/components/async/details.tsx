@@ -1,7 +1,7 @@
 import React from "react";
 import Moment from "react-moment";
 import Table from "react-bootstrap/Table";
-import G from "../../config/globals";
+import "../../env";
 import { properCase } from "../../common/functions";
 import { Record, getStatusIcon } from "./functions";
 import { AsyncType } from "../../db/definitions";
@@ -33,7 +33,7 @@ export class AsyncDetails extends React.Component<
       match: { params }
     } = this.props;
 
-    fetch(`/api/autorun/${params.table}/${params.id}`)
+    fetch(`${process.env.API_ROOT_PATH}/async/${params.table}/${params.id}`)
       .then(res => res.json())
       .then(
         result => {
@@ -81,37 +81,43 @@ export class AsyncDetails extends React.Component<
             <tr>
               <td>Status</td>
               <td>
-                {getStatusIcon(item.STATUS)} {properCase(item.STATUS)}
+                {getStatusIcon(item.status)} {properCase(item.status)}
               </td>
             </tr>
             <tr>
               <td>ID</td>
-              <td>{item.ID}</td>
+              <td>{item.id}</td>
             </tr>
             <tr>
               <td>Title</td>
-              <td>{item.TITLE}</td>
+              <td>{item.title}</td>
             </tr>
             <tr>
               <td>Username</td>
-              <td>{item.USERNAME}</td>
+              <td>{item.username}</td>
             </tr>
             <tr>
               <td>Submitted On</td>
               <td>
-                <Moment format={G.dateTimeFormat}>{item.SUBMITTED}</Moment>
+                <Moment format={process.env.dateTimeFormat}>
+                  {item.submitted}
+                </Moment>
               </td>
             </tr>
             <tr>
               <td>Started On</td>
               <td>
-                <Moment format={G.dateTimeFormat}>{item.STARTED}</Moment>
+                <Moment format={process.env.dateTimeFormat}>
+                  {item.started}
+                </Moment>
               </td>
             </tr>
             <tr>
               <td>Completed On</td>
               <td>
-                <Moment format={G.dateTimeFormat}>{item.COMPLETED}</Moment>
+                <Moment format={process.env.dateTimeFormat}>
+                  {item.completed}
+                </Moment>
               </td>
             </tr>
           </Table>

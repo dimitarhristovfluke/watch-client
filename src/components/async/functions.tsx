@@ -9,18 +9,6 @@ import {
   faExclamationTriangle
 } from "@fortawesome/free-solid-svg-icons";
 
-import { isFiveMinAgo, NOW } from "../../common/functions";
-import { AsyncType, AsyncStatus } from "../../db/definitions";
-
-export function getAsyncStatus(item: AsyncType): AsyncStatus {
-  if (!!item.COMPLETED && !item.LERROR) return "COMPLETED";
-  if (!!item.COMPLETED && item.LERROR) return "ERROR";
-  if (!!item.STARTED && item.STARTED < NOW) return "STARTED";
-  if (!!item.STARTED && isFiveMinAgo(item.STARTED)) return "STALLED";
-  if (!!item.SUBMITTED && item.SUBMITTED) return "PENDING";
-  return "UNKNOWN";
-}
-
 interface PageState {
   error: any;
   isLoaded: boolean;
@@ -36,7 +24,7 @@ export interface List<T> extends PageState {
 
 export const getStatusIcon = (status: string) => {
   switch (status) {
-    case "STARTED":
+    case "RUNNING":
       return <FontAwesomeIcon icon={faCog} spin size="lg" color="blue" />;
       break;
     case "PENDING":
@@ -49,7 +37,7 @@ export const getStatusIcon = (status: string) => {
         />
       );
       break;
-    case "COMPLETED":
+    case "SUCCESS":
       return <FontAwesomeIcon icon={faCheckCircle} color="green" size="lg" />;
       break;
     case "ERROR":

@@ -2,26 +2,23 @@ import React from "react";
 import Moment from "react-moment";
 import Table from "react-bootstrap/Table";
 import * as R from "ramda";
-import { Link } from "react-router-dom";
-
-import { AsyncType } from "../../db/definitions";
+import { EmaintAutoLogType } from "../../db/definitions";
 import "../../env";
-import { List, getStatusIcon } from "./functions";
-import { properCase } from "../../common/functions";
+import { getStatusIcon, List } from "./functions";
 
-interface AsyncTableProps {
+interface EmaintAutoLogTableProps {
   match: {
     params: {
-      table: string;
+      cautoid: string;
     };
   };
 }
 
-export class AsyncTable extends React.Component<
-  AsyncTableProps,
-  List<AsyncType>
+export class EmaintAutoLogDetails extends React.Component<
+  EmaintAutoLogTableProps,
+  List<EmaintAutoLogType>
 > {
-  constructor(props: AsyncTableProps) {
+  constructor(props: EmaintAutoLogTableProps) {
     super(props);
     this.state = {
       error: null,
@@ -35,13 +32,16 @@ export class AsyncTable extends React.Component<
       match: { params }
     } = this.props;
 
-    fetch(`${process.env.API_ROOT_PATH}/async/${params.table}`)
-      .then<AsyncType[]>(res => res.json())
+    fetch(`${process.env.API_ROOT_PATH}/emaintautolog/${params.cautoid}`)
+      .then<EmaintAutoLogType[]>(res => res.json())
       .then(
         result => {
+          const sortedResults = R.reverse(
+            R.sortBy(item => item.timestamp, result)
+          );
           this.setState({
             isLoaded: true,
-            items: result
+            items: sortedResults
           });
         },
         // Note: it's important to handle errors here
@@ -69,6 +69,7 @@ export class AsyncTable extends React.Component<
     if (error) {
       return <div>Error: {error.message}</div>;
     }
+
     if (!isLoaded) {
       return <div>Loading...</div>;
     } else {
@@ -77,40 +78,28 @@ export class AsyncTable extends React.Component<
           <Table bordered hover responsive>
             <tr>
               <th></th>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Username</th>
-              <th>Submitted</th>
-              <th>Started</th>
-              <th>Completed</th>
+              <th>Date/Time</th>
+              <th>Process ID</th>
+              <th>Command</th>
+              <th>Program Executed</th>
+              <th>Line No</th>
+              <th>Error Message</th>
+              <th>Run ID</th>
             </tr>
             {items.map(item => (
               <tr>
-                <td>
-                  {getStatusIcon(item.status)} {properCase(item.status)}
-                </td>
-                <td>
-                  <Link to={`/async/${params.table}/${item.id}`}>
-                    {item.id}
-                  </Link>
-                </td>
-                <td>{item.title}</td>
-                <td>{item.username}</td>
+                <td>{getStatusIcon(item)}</td>
                 <td>
                   <Moment format={process.env.dateTimeFormat}>
-                    {item.submitted}
+                    {item.timestamp}
                   </Moment>
                 </td>
-                <td>
-                  <Moment format={process.env.dateTimeFormat}>
-                    {item.started}
-                  </Moment>
-                </td>
-                <td>
-                  <Moment format={process.env.dateTimeFormat}>
-                    {item.completed}
-                  </Moment>
-                </td>
+                <td>{item.cautoid}</td>
+                <td>{item.cautodesc}</td>
+                <td>{item.cprogram}</td>
+                <td>{item.nlineno}</td>
+                <td>{item.cerrormsg}</td>
+                <td>{item.crunid}</td>
               </tr>
             ))}
           </Table>

@@ -1,8 +1,9 @@
 import React from "react";
 import Moment from "react-moment";
 import Table from "react-bootstrap/Table";
+import { Button } from "react-bootstrap";
 import { EmaintAutoType } from "../../db/definitions";
-import G from "../../config/globals";
+import "../../env";
 import { properCase } from "../../common/functions";
 import { Record, getStatusIcon, getInterval } from "./functions";
 
@@ -33,7 +34,7 @@ export class AutorunDetails extends React.Component<
       match: { params }
     } = this.props;
 
-    fetch(`/api/autorun/${params.table}/${params.id}`)
+    fetch(`${process.env.API_ROOT_PATH}/autorun/${params.table}/${params.id}`)
       .then(res => res.json())
       .then(
         result => {
@@ -81,36 +82,53 @@ export class AutorunDetails extends React.Component<
             <tr>
               <td>Status</td>
               <td>
-                {getStatusIcon(item.STATUS)} {properCase(item.STATUS)}
+                {getStatusIcon(item.status)} {properCase(item.status)}{" "}
+                <Button
+                  type="button"
+                  variant="primary"
+                  block={false}
+                  size="sm"
+                  href={`${process.env.CLIENT_ROOT_PATH}/emaintautolog/${item.cautoid}`}
+                >
+                  View error log
+                </Button>
               </td>
             </tr>
             <tr>
               <td>Process ID</td>
-              <td>{item.CAUTOID}</td>
+              <td>{item.cautoid}</td>
             </tr>
             <tr>
               <td>Description</td>
-              <td>{item.CDESCRIP}</td>
+              <td>{item.cdescrip}</td>
             </tr>
             <tr>
               <td>Last Run</td>
               <td>
-                <Moment format={G.dateTimeFormat}>{item.DLASTRUN}</Moment>
+                <Moment format={process.env.dateTimeFormat}>
+                  {item.dlastrun}
+                </Moment>
               </td>
             </tr>
             <tr>
               <td>Next Run</td>
               <td>
-                <Moment format={G.dateTimeFormat}>{item.DNEXTRUN}</Moment>
+                <Moment format={process.env.dateTimeFormat}>
+                  {item.dnextrun}
+                </Moment>
               </td>
             </tr>
             <tr>
               <td>Run Interval</td>
-              <td>{getInterval(item.NEVERY, item.CINTERVAL)}</td>
+              <td>{getInterval(item.nevery, item.cinterval)}</td>
             </tr>
             <tr>
               <td>Command Line</td>
-              <td>{item.CCODE}</td>
+              <td>{item.ccode}</td>
+            </tr>
+            <tr>
+              <td>Message</td>
+              <td>{item.message}</td>
             </tr>
           </Table>
         </React.Fragment>
