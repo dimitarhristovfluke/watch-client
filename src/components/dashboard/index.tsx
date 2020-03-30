@@ -12,7 +12,7 @@ interface DashboardState {
   items: ProcessInfo[];
 }
 
-export class Dashboard extends React.Component<DashboardProps, DashboardState> {
+class Dashboard extends React.Component<DashboardProps, DashboardState> {
   handleInterval = 0;
 
   constructor(props: DashboardProps) {
@@ -28,7 +28,10 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 
   componentDidMount() {
     this.fetchData();
-    this.handleInterval = window.setInterval(this.fetchData, 10000);
+    this.handleInterval = window.setInterval(
+      this.fetchData,
+      parseInt(process.env.REACT_APP_RefreshInterval) * 1000 || 60
+    );
   }
 
   componentWillUnmount() {
@@ -39,7 +42,7 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
     return items.map((item, idx) => (
       <DashboardCard
         item={item}
-        dateFormat={process.env.dateTimeFormat}
+        dateFormat={process.env.REACT_APP_dateTimeFormat}
         key={idx}
       />
     ));
@@ -47,7 +50,9 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 
   fetchData = () => {
     const self = this;
-    fetch(`${process.env.API_ROOT_PATH}/dashboard`, { cache: "no-store" })
+    fetch(`${process.env.REACT_APP_API_ROOT_PATH}/dashboard`, {
+      cache: "no-store"
+    })
       .then(res => res.json())
       .then(
         result => {
@@ -81,3 +86,5 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
     }
   }
 }
+
+export default Dashboard;

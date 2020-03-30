@@ -1,22 +1,21 @@
 import React from "react";
-import Moment from "react-moment";
-import Table from "react-bootstrap/Table";
-import * as R from "ramda";
 import { Link } from "react-router-dom";
-
 import { EmaintAutoType } from "../../db/definitions";
-import { List, getStatusIcon, getInterval } from "./functions";
-import { properCase } from "../../common/functions";
+import { getStatusIcon, getInterval } from "./functions";
+import { List } from "../../common/interfaces";
+import Date from "../../common/components/date";
+import { Pagination, PaginationItem, PaginationLink, Table } from "reactstrap";
 
 interface AutorunTableProps {
   match: {
     params: {
       table: string;
+      status: string;
     };
   };
 }
 
-export class AutorunTable extends React.Component<
+class AutorunTable extends React.Component<
   AutorunTableProps,
   List<EmaintAutoType>
 > {
@@ -25,16 +24,30 @@ export class AutorunTable extends React.Component<
     this.state = {
       error: null,
       isLoaded: false,
-      items: []
+      items: [],
+      pageNumber: 1,
+      pageSize: 10
     };
   }
 
-  componentDidMount() {
+  nextPage = () => this.setState({ pageNumber: this.state.pageNumber + 1 });
+  prevPage = () => this.setState({ pageNumber: this.state.pageNumber - 1 });
+  setPage = (page: number) => this.setState({ pageNumber: page });
+
+  fetchData = (url: string) => {
     const {
       match: { params }
     } = this.props;
+    const { pageNumber, pageSize } = this.state;
 
-    fetch(`${process.env.API_ROOT_PATH}/autorun/${params.table}`)
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: `status=${params.status ||
+        ""}&page=${pageNumber}&pageSize=${pageSize}`
+    };
+
+    fetch(url, options)
       .then<EmaintAutoType[]>(res => res.json())
       .then(
         result => {
@@ -53,6 +66,32 @@ export class AutorunTable extends React.Component<
           });
         }
       );
+  };
+
+  componentDidUpdate(np, ns) {
+    const {
+      match: { params }
+    } = this.props;
+    const prevTable = params.table;
+    const nextTable = np.match.params.table;
+    if (
+      (nextTable && nextTable !== prevTable) ||
+      this.state.pageNumber !== ns.pageNumber
+    ) {
+      this.setState({ isLoaded: false });
+      this.fetchData(
+        `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${nextTable}`
+      );
+    }
+  }
+
+  componentDidMount() {
+    const {
+      match: { params }
+    } = this.props;
+    this.fetchData(
+      `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}`
+    );
   }
 
   componentWillUnmount() {
@@ -60,7 +99,7 @@ export class AutorunTable extends React.Component<
   }
 
   render() {
-    const { error, isLoaded, items } = this.state;
+    const { error, isLoaded, items, pageNumber } = this.state;
     const {
       match: { params }
     } = this.props;
@@ -85,9 +124,7 @@ export class AutorunTable extends React.Component<
             </tr>
             {items.map(item => (
               <tr>
-                <td>
-                  {getStatusIcon(item.status)} {properCase(item.status)}
-                </td>
+                <td>{getStatusIcon(item.status)}</td>
                 <td>
                   <Link to={`/autorun/${params.table}/${item.cautoid}`}>
                     {item.cautoid}
@@ -95,22 +132,57 @@ export class AutorunTable extends React.Component<
                 </td>
                 <td>{item.cdescrip}</td>
                 <td>
-                  <Moment format={process.env.dateTimeFormat}>
-                    {item.dlastrun}
-                  </Moment>
+                  <Date date={item.dlastrun} />
                 </td>
                 <td>
-                  <Moment format={process.env.dateTimeFormat}>
-                    {item.dnextrun}
-                  </Moment>
+                  <Date date={item.dnextrun} />
                 </td>
                 <td>{getInterval(item.nevery, item.cinterval)}</td>
                 <td>{item.message}</td>
               </tr>
             ))}
           </Table>
+          <Pagination>
+            <PaginationItem>
+              <PaginationLink
+                previous
+                tag="button"
+                onClick={() => this.prevPage()}
+              ></PaginationLink>
+            </PaginationItem>
+            <PaginationItem active={pageNumber === 1}>
+              <PaginationLink tag="button" onClick={() => this.setPage(1)}>
+                1
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem active={pageNumber === 2}>
+              <PaginationLink tag="button" onClick={() => this.setPage(2)}>
+                2
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem active={pageNumber === 3}>
+              <PaginationLink tag="button" onClick={() => this.setPage(3)}>
+                3
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem active={pageNumber === 4}>
+              <PaginationLink tag="button" onClick={() => this.setPage(4)}>
+                4
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem active={pageNumber === 5}>
+              <PaginationLink tag="button" onClick={() => this.setPage(5)}>
+                5
+              </PaginationLink>
+            </PaginationItem>
+            <PaginationItem onClick={() => this.nextPage()}>
+              <PaginationLink next tag="button"></PaginationLink>
+            </PaginationItem>
+          </Pagination>
         </React.Fragment>
       );
     }
   }
 }
+
+export default AutorunTable;

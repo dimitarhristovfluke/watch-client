@@ -7,10 +7,14 @@ export interface ProcDefType {
   taskdesc: string;
   lastcheck: Date;
   cserverid: string;
+  procmon: boolean;
+  procctrol: boolean;
+  lrecycle: boolean;
+  nrecevery: number;
+  crecintrvl: string;
 }
 
 export interface ProcStatType {
-  procdefid: number;
   pid: string;
   pname: string;
   cmdline: string;
@@ -19,6 +23,7 @@ export interface ProcStatType {
   palive: boolean;
   pelapsed: number;
   pkilled: boolean;
+  cserverid: string;
 }
 
 export interface EmaintAutoType {
@@ -32,6 +37,7 @@ export interface EmaintAutoType {
   crunid: string;
   status: string;
   message: string;
+  cserverid: string;
 }
 
 export interface EmaintAutoLogType {
@@ -57,6 +63,10 @@ export interface AsyncType {
   completed: Date;
   status: string;
   lerror: boolean;
+  lcanceled: boolean;
+  inputdata: string;
+  returndata: string;
+  properties: string;
 }
 
 export type AsyncStatus =
@@ -70,7 +80,7 @@ export type AsyncStatus =
 export type AutorunStatus =
   | "RUNNING"
   | "PENDING"
-  | "DONE"
+  | "COMPLETED"
   | "ERROR"
   | "STALLED"
   | "UNKNOWN";

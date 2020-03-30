@@ -9,19 +9,6 @@ import {
   faBan
 } from "@fortawesome/free-solid-svg-icons";
 
-interface PageState {
-  error: any;
-  isLoaded: boolean;
-}
-
-export interface Record<T> extends PageState {
-  item: T;
-}
-
-export interface List<T> extends PageState {
-  items: T[];
-}
-
 export const getInterval = (nEvery: number, cInterval: string) => {
   switch (cInterval) {
     case "MIN":
@@ -40,32 +27,18 @@ export const getInterval = (nEvery: number, cInterval: string) => {
 export const getStatusIcon = (status: string) => {
   switch (status) {
     case "RUNNING":
-      return <FontAwesomeIcon icon={faCog} spin size="lg" color="blue" />;
-      break;
+      return <span className="badge badge-primary">RUNNING</span>;
     case "PENDING":
-      return (
-        <FontAwesomeIcon
-          icon={faExclamationTriangle}
-          color=" #FFBF00"
-          title="Pending"
-          size="lg"
-        />
-      );
-      break;
+      return <span className="badge badge-warning">PENDING</span>;
     case "SUCCESS":
-      return <FontAwesomeIcon icon={faCheckCircle} color="green" size="lg" />;
-      break;
+      return <span className="badge badge-success">SUCCESS</span>;
     case "ERROR":
-      return <FontAwesomeIcon icon={faTimesCircle} color="red" size="lg" />;
-      break;
+      return <span className="badge badge-warning">ERROR</span>;
     case "STALLED":
-      return <FontAwesomeIcon icon={faBan} color="red" size="lg" />;
-      break;
+      return <span className="badge badge-danger">DID NOT RUN</span>;
     case "UNKNOWN":
-      return <FontAwesomeIcon icon={faQuestionCircle} color="grey" size="lg" />;
-      break;
+      return <span className="badge badge-secondary">UNKNOWN</span>;
     default:
-      return <FontAwesomeIcon icon={faQuestionCircle} size="lg" />;
-      break;
+      return <span className="badge badge-secondary">UNKNOWN</span>;
   }
 };

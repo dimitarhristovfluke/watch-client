@@ -3,7 +3,7 @@ import "moment-timezone";
 import "../env";
 
 const isOlderThan = (date: Date, seconds: number) =>
-  Moment(toCurrentTimeZone(date))
+  toCurrentTimeZone(date)
     .add(seconds, "s")
     .toDate()
     .valueOf() <
@@ -12,7 +12,7 @@ const isOlderThan = (date: Date, seconds: number) =>
     .valueOf();
 
 const isFutureDate = (date: Date) =>
-  Moment(toCurrentTimeZone(date))
+  toCurrentTimeZone(date)
     .toDate()
     .valueOf() >
   Moment(Date.now())
@@ -27,7 +27,7 @@ export const isPastDate = (date: Date) => !date || isOlderThan(date, 1);
 export const clientZoneOffset = Moment.parseZone(new Date()).utcOffset();
 export const toCurrentTimeZone = (date: Date) =>
   Moment(date).add(
-    process.env.SERVER_ZONE_OFFSET + clientZoneOffset,
+    parseInt(process.env.REACT_APP_SERVER_ZONE_OFFSET) + clientZoneOffset,
     "minutes"
   );
 
@@ -40,8 +40,8 @@ export const properCase = function(s: string) {
 export const isToday = (date: Date) => {
   const today = new Date();
   return (
-    date.getDate() == today.getDate() &&
-    date.getMonth() == today.getMonth() &&
-    date.getFullYear() == today.getFullYear()
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
   );
 };

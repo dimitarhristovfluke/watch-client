@@ -11,19 +11,11 @@ interface PageState {
   isLoaded: boolean;
 }
 
-export interface Record<T> extends PageState {
-  item: T;
-}
-
-export interface List<T> extends PageState {
-  items: T[];
-}
-
 export const getStatusIcon = (item: EmaintAutoLogType) => {
   return !item.cerrormsg.length ||
     item.cerrormsg.toUpperCase() === "SUCCESS" ? (
-    <FontAwesomeIcon icon={faCheckCircle} color="green" size="lg" />
+    <span className="badge badge-success">SUCCESS</span>
   ) : (
-    <FontAwesomeIcon icon={faTimesCircle} color="red" size="lg" />
+    <span className="badge badge-danger">ERROR</span>
   );
 };

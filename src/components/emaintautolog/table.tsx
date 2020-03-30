@@ -1,14 +1,14 @@
 import React from "react";
 import Moment from "react-moment";
 import Table from "react-bootstrap/Table";
-import * as R from "ramda";
 import { EmaintAutoLogType } from "../../db/definitions";
 import "../../env";
-import { List, getStatusIcon } from "./functions";
+import { getStatusIcon } from "./functions";
+import { List } from "../../common/interfaces";
 
 interface EmaintAutoLogTableProps {}
 
-export class EmaintAutoLogTable extends React.Component<
+class EmaintAutoLogTable extends React.Component<
   EmaintAutoLogTableProps,
   List<EmaintAutoLogType>
 > {
@@ -17,12 +17,14 @@ export class EmaintAutoLogTable extends React.Component<
     this.state = {
       error: null,
       isLoaded: false,
-      items: []
+      items: [],
+      pageNumber: 1,
+      pageSize: 10
     };
   }
 
   componentDidMount() {
-    fetch(`${process.env.API_ROOT_PATH}/emaintautolog`)
+    fetch(`${process.env.REACT_APP_API_ROOT_PATH}/emaintautolog`)
       .then<EmaintAutoLogType[]>(res => res.json())
       .then(
         result => {
@@ -73,7 +75,7 @@ export class EmaintAutoLogTable extends React.Component<
               <tr>
                 <td>{getStatusIcon(item)}</td>
                 <td>
-                  <Moment format={process.env.dateTimeFormat}>
+                  <Moment format={process.env.REACT_APP_dateTimeFormat}>
                     {item.timestamp}
                   </Moment>
                 </td>
@@ -91,3 +93,5 @@ export class EmaintAutoLogTable extends React.Component<
     }
   }
 }
+
+export default EmaintAutoLogTable;

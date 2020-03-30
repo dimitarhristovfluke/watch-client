@@ -4,7 +4,8 @@ import Table from "react-bootstrap/Table";
 import * as R from "ramda";
 import { EmaintAutoLogType } from "../../db/definitions";
 import "../../env";
-import { getStatusIcon, List } from "./functions";
+import { getStatusIcon } from "./functions";
+import { List } from "../../common/interfaces";
 
 interface EmaintAutoLogTableProps {
   match: {
@@ -14,7 +15,7 @@ interface EmaintAutoLogTableProps {
   };
 }
 
-export class EmaintAutoLogDetails extends React.Component<
+class EmaintAutoLogDetails extends React.Component<
   EmaintAutoLogTableProps,
   List<EmaintAutoLogType>
 > {
@@ -23,7 +24,9 @@ export class EmaintAutoLogDetails extends React.Component<
     this.state = {
       error: null,
       isLoaded: false,
-      items: []
+      items: [],
+      pageNumber: 1,
+      pageSize: 10
     };
   }
 
@@ -32,7 +35,9 @@ export class EmaintAutoLogDetails extends React.Component<
       match: { params }
     } = this.props;
 
-    fetch(`${process.env.API_ROOT_PATH}/emaintautolog/${params.cautoid}`)
+    fetch(
+      `${process.env.REACT_APP_API_ROOT_PATH}/emaintautolog/${params.cautoid}`
+    )
       .then<EmaintAutoLogType[]>(res => res.json())
       .then(
         result => {
@@ -62,9 +67,6 @@ export class EmaintAutoLogDetails extends React.Component<
 
   render() {
     const { error, isLoaded, items } = this.state;
-    const {
-      match: { params }
-    } = this.props;
 
     if (error) {
       return <div>Error: {error.message}</div>;
@@ -90,7 +92,7 @@ export class EmaintAutoLogDetails extends React.Component<
               <tr>
                 <td>{getStatusIcon(item)}</td>
                 <td>
-                  <Moment format={process.env.dateTimeFormat}>
+                  <Moment format={process.env.REACT_APP_dateTimeFormat}>
                     {item.timestamp}
                   </Moment>
                 </td>
@@ -108,3 +110,5 @@ export class EmaintAutoLogDetails extends React.Component<
     }
   }
 }
+
+export default EmaintAutoLogDetails;

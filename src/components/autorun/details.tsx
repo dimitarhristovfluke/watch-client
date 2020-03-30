@@ -1,11 +1,37 @@
 import React from "react";
-import Moment from "react-moment";
-import Table from "react-bootstrap/Table";
-import { Button } from "react-bootstrap";
 import { EmaintAutoType } from "../../db/definitions";
 import "../../env";
-import { properCase } from "../../common/functions";
-import { Record, getStatusIcon, getInterval } from "./functions";
+import { getStatusIcon, getInterval } from "./functions";
+import { Record, PageMode } from "../../common/interfaces";
+import { Link, RouteComponentProps, withRouter } from "react-router-dom";
+import Date from "../../common/components/date";
+import {
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  Col,
+  Collapse,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
+  Fade,
+  Form,
+  FormGroup,
+  FormText,
+  FormFeedback,
+  Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButtonDropdown,
+  InputGroupText,
+  Label,
+  Row
+} from "reactstrap";
+
+import "./index.css";
 
 interface AutorunDetailsProps {
   match: {
@@ -16,25 +42,24 @@ interface AutorunDetailsProps {
   };
 }
 
-export class AutorunDetails extends React.Component<
-  AutorunDetailsProps,
+type PropsType = AutorunDetailsProps & RouteComponentProps;
+
+class AutorunDetails extends React.Component<
+  PropsType,
   Record<EmaintAutoType>
 > {
-  constructor(props: AutorunDetailsProps) {
+  constructor(props: PropsType) {
     super(props);
     this.state = {
       error: null,
       isLoaded: false,
-      item: null
+      item: null,
+      mode: "read"
     };
   }
 
-  componentDidMount() {
-    const {
-      match: { params }
-    } = this.props;
-
-    fetch(`${process.env.API_ROOT_PATH}/autorun/${params.table}/${params.id}`)
+  fetchData = (url: string) => {
+    fetch(url)
       .then(res => res.json())
       .then(
         result => {
@@ -53,14 +78,88 @@ export class AutorunDetails extends React.Component<
           });
         }
       );
+  };
+
+  componentWillUpdate(np) {
+    const {
+      match: { params }
+    } = this.props;
+    const prevId = params.id;
+    const nextId = np.match.params.id;
+    if (nextId && nextId !== prevId) {
+      this.fetchData(
+        `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}/${nextId}`
+      );
+    }
+  }
+
+  componentDidMount() {
+    const {
+      match: { params }
+    } = this.props;
+
+    this.fetchData(
+      `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}/${params.id}`
+    );
   }
 
   componentWillUnmount() {
     // clean up
   }
 
+  restartProcess = () => {
+    const {
+      match: { params }
+    } = this.props;
+    this.fetchData(
+      `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}/${params.id}/start`
+    );
+  };
+
+  viewErrorsLog = () => {
+    const {
+      match: { params }
+    } = this.props;
+
+    this.props.history.push(`/emaintautolog/${params.id}`);
+  };
+
+  renderFooter = (mode: string) => {
+    return mode === "edit" ? (
+      <CardFooter>
+        <Button type="submit" size="sm" color="primary">
+          <i className="fa fa-dot-circle-o"></i> Submit
+        </Button>{" "}
+        <Button type="reset" size="sm" color="danger">
+          <i className="fa fa-ban"></i> Reset
+        </Button>
+      </CardFooter>
+    ) : (
+      <CardFooter>
+        <Button type="submit" size="sm" color="warning">
+          <i className="fa fa-pencil"></i> Edit
+        </Button>{" "}
+        <Button
+          type="reset"
+          size="sm"
+          color="danger"
+          onClick={() => this.viewErrorsLog()}
+        >
+          <i className="fa fa-ban"></i> View Errors Log
+        </Button>{" "}
+        <Button
+          type="reset"
+          size="sm"
+          color="success"
+          onClick={() => this.restartProcess()}
+        >
+          <i className="fa fa-nav"></i> Start Process Now
+        </Button>
+      </CardFooter>
+    );
+  };
   render() {
-    const { error, isLoaded, item } = this.state;
+    const { error, isLoaded, item, mode } = this.state;
     const {
       match: { params }
     } = this.props;
@@ -73,66 +172,92 @@ export class AutorunDetails extends React.Component<
       return <div>Loading...</div>;
     } else {
       return (
-        <React.Fragment>
-          <Table striped bordered hover responsive>
-            <colgroup>
-              <col width="300px"></col>
-              <col width="*"></col>
-            </colgroup>
-            <tr>
-              <td>Status</td>
-              <td>
-                {getStatusIcon(item.status)} {properCase(item.status)}{" "}
-                <Button
-                  type="button"
-                  variant="primary"
-                  block={false}
-                  size="sm"
-                  href={`${process.env.CLIENT_ROOT_PATH}/emaintautolog/${item.cautoid}`}
+        <Row>
+          <Col xs="12" md="12" lg="12">
+            <Card>
+              <CardHeader>
+                <strong>{params.table}</strong> : {params.id}
+              </CardHeader>
+              <CardBody>
+                <Form
+                  action=""
+                  method="post"
+                  encType="multipart/form-data"
+                  className="form-horizontal"
                 >
-                  View error log
-                </Button>
-              </td>
-            </tr>
-            <tr>
-              <td>Process ID</td>
-              <td>{item.cautoid}</td>
-            </tr>
-            <tr>
-              <td>Description</td>
-              <td>{item.cdescrip}</td>
-            </tr>
-            <tr>
-              <td>Last Run</td>
-              <td>
-                <Moment format={process.env.dateTimeFormat}>
-                  {item.dlastrun}
-                </Moment>
-              </td>
-            </tr>
-            <tr>
-              <td>Next Run</td>
-              <td>
-                <Moment format={process.env.dateTimeFormat}>
-                  {item.dnextrun}
-                </Moment>
-              </td>
-            </tr>
-            <tr>
-              <td>Run Interval</td>
-              <td>{getInterval(item.nevery, item.cinterval)}</td>
-            </tr>
-            <tr>
-              <td>Command Line</td>
-              <td>{item.ccode}</td>
-            </tr>
-            <tr>
-              <td>Message</td>
-              <td>{item.message}</td>
-            </tr>
-          </Table>
-        </React.Fragment>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label>Status</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      {getStatusIcon(item.status)}
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Process ID</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      {item.cautoid}
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Description</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      {item.cdescrip}
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Last Run</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      <Date date={item.dlastrun} />
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Next Run</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      <Date date={item.dnextrun} />
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Running Interval</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      {getInterval(item.nevery, item.cinterval)}
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Command Line</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      {item.ccode}
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Message</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      {item.message}
+                    </Col>
+                  </FormGroup>
+                </Form>
+              </CardBody>
+              {this.renderFooter(mode)}
+            </Card>
+          </Col>
+        </Row>
       );
     }
   }
 }
+
+export default withRouter(AutorunDetails);

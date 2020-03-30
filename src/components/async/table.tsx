@@ -1,41 +1,44 @@
 import React from "react";
-import Moment from "react-moment";
 import Table from "react-bootstrap/Table";
-import * as R from "ramda";
 import { Link } from "react-router-dom";
-
 import { AsyncType } from "../../db/definitions";
 import "../../env";
-import { List, getStatusIcon } from "./functions";
-import { properCase } from "../../common/functions";
+import { getStatusIcon } from "./functions";
+import { List } from "../../common/interfaces";
+import Date from "../../common/components/date";
 
 interface AsyncTableProps {
   match: {
     params: {
       table: string;
+      status: string;
     };
   };
 }
 
-export class AsyncTable extends React.Component<
-  AsyncTableProps,
-  List<AsyncType>
-> {
+class AsyncTable extends React.Component<AsyncTableProps, List<AsyncType>> {
   constructor(props: AsyncTableProps) {
     super(props);
     this.state = {
       error: null,
       isLoaded: false,
-      items: []
+      items: [],
+      pageNumber: 1,
+      pageSize: 10
     };
   }
 
-  componentDidMount() {
+  fetchData = (url: string) => {
     const {
       match: { params }
     } = this.props;
 
-    fetch(`${process.env.API_ROOT_PATH}/async/${params.table}`)
+    const options = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: `status=${params.status || ""}`
+    };
+    fetch(url, options)
       .then<AsyncType[]>(res => res.json())
       .then(
         result => {
@@ -54,6 +57,30 @@ export class AsyncTable extends React.Component<
           });
         }
       );
+  };
+
+  componentDidMount() {
+    const {
+      match: { params }
+    } = this.props;
+
+    this.fetchData(
+      `${process.env.REACT_APP_API_ROOT_PATH}/async/${params.table}`
+    );
+  }
+
+  componentWillUpdate(np) {
+    const {
+      match: { params }
+    } = this.props;
+    const prevTable = params.table;
+    const nextTable = np.match.params.table;
+    if (nextTable && nextTable !== prevTable) {
+      this.setState({ isLoaded: false });
+      this.fetchData(
+        `${process.env.REACT_APP_API_ROOT_PATH}/async/${nextTable}`
+      );
+    }
   }
 
   componentWillUnmount() {
@@ -86,9 +113,7 @@ export class AsyncTable extends React.Component<
             </tr>
             {items.map(item => (
               <tr>
-                <td>
-                  {getStatusIcon(item.status)} {properCase(item.status)}
-                </td>
+                <td>{getStatusIcon(item.status)}</td>
                 <td>
                   <Link to={`/async/${params.table}/${item.id}`}>
                     {item.id}
@@ -97,19 +122,13 @@ export class AsyncTable extends React.Component<
                 <td>{item.title}</td>
                 <td>{item.username}</td>
                 <td>
-                  <Moment format={process.env.dateTimeFormat}>
-                    {item.submitted}
-                  </Moment>
+                  <Date date={item.submitted} />
                 </td>
                 <td>
-                  <Moment format={process.env.dateTimeFormat}>
-                    {item.started}
-                  </Moment>
+                  <Date date={item.started} />
                 </td>
                 <td>
-                  <Moment format={process.env.dateTimeFormat}>
-                    {item.completed}
-                  </Moment>
+                  <Date date={item.completed} />
                 </td>
               </tr>
             ))}
@@ -119,3 +138,5 @@ export class AsyncTable extends React.Component<
     }
   }
 }
+
+export default AsyncTable;
