@@ -1,6 +1,6 @@
 import React from "react";
 import * as R from "ramda";
-import { Card } from "react-bootstrap";
+import { Card, Row, Col } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
@@ -61,19 +61,25 @@ export const ProcmonDashboardCard = ({ items }: PropType) => {
         <Card.Text>
           Health status : <b>{procmonOveralHalthStatus(items)}</b>
         </Card.Text>
-        {items.map((i) => (
-          <Card.Text style={{ textAlign: "center" }}>
-            <Link
-              style={{
-                color: "black",
-              }}
-              to={`${i.detailsurl}`}
-            >
-              <div style={{ width: 80 }}>{i.cserverid}</div>
-            </Link>
-            : {procmonHealthStatus(i)}
-          </Card.Text>
-        ))}
+        <Row>
+          {items.map((i) => (
+            <Col lg={6}>
+              <div>
+                <Link
+                  style={{
+                    color: "black",
+                  }}
+                  to={`${i.detailsurl}`}
+                >
+                  <span className="procmon-server-status-span">
+                    {i.cserverid}:
+                  </span>
+                </Link>
+                {procmonHealthStatus(i)}
+              </div>
+            </Col>
+          ))}
+        </Row>
       </Card.Body>
     </Card>
   );
