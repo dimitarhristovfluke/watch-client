@@ -4,8 +4,11 @@ import { Link } from "react-router-dom";
 import { AsyncType } from "../../db/definitions";
 import "../../env";
 import { getStatusIcon } from "./functions";
-import { List } from "../../common/interfaces";
+import { List, Column } from "../../common/interfaces";
 import Date from "../../common/components/date";
+import { merge1, merge2 } from "../../common/merge";
+import api from "./api";
+import SimpleTable from "../../common/components/simpletable";
 
 interface AsyncTableProps {
   match: {
@@ -22,38 +25,44 @@ class AsyncTable extends React.Component<AsyncTableProps, List<AsyncType>> {
     this.state = {
       error: null,
       isLoaded: false,
-      items: [],
-      pageNumber: 1,
-      pageSize: 10
+      data: {
+        items: [],
+        pageNumber: 1,
+        totalPages: 0,
+        totalRecords: 0,
+      },
+      orderBy: {
+        field: "submitted",
+        dest: "desc",
+      },
+      filter: props.match.params.status
+        ? { field: "status", op: "eq", value: props.match.params.status }
+        : undefined,
     };
   }
 
-  fetchData = (url: string) => {
+  fetchData = (page: number = 1) => {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
 
-    const options = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: `status=${params.status || ""}`
-    };
-    fetch(url, options)
-      .then<AsyncType[]>(res => res.json())
+    const body = `status=${this.state.filter?.value || ""}&page=${page}&sort=${
+      this.state.orderBy?.field || ""
+    }&dest=${this.state.orderBy?.dest || ""}`;
+
+    api()
+      .list(params.table, body)
       .then(
-        result => {
+        (result) => {
           this.setState({
             isLoaded: true,
-            items: result
+            data: result,
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        error => {
+        (error) => {
           this.setState({
             isLoaded: true,
-            error
+            error,
           });
         }
       );
@@ -61,25 +70,29 @@ class AsyncTable extends React.Component<AsyncTableProps, List<AsyncType>> {
 
   componentDidMount() {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
 
-    this.fetchData(
-      `${process.env.REACT_APP_API_ROOT_PATH}/async/${params.table}`
-    );
+    this.fetchData();
   }
 
-  componentWillUpdate(np) {
+  componentDidUpdate(pp, ps) {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
-    const prevTable = params.table;
-    const nextTable = np.match.params.table;
-    if (nextTable && nextTable !== prevTable) {
-      this.setState({ isLoaded: false });
-      this.fetchData(
-        `${process.env.REACT_APP_API_ROOT_PATH}/async/${nextTable}`
-      );
+    const nextTable = params.table;
+    const prevTable = pp.match.params.table;
+    const { pageNumber } = this.state.data;
+    const tableChanged = nextTable && nextTable !== prevTable;
+    if (
+      tableChanged ||
+      pageNumber !== ps.data.pageNumber ||
+      this.state.orderBy?.field !== ps.orderBy?.field ||
+      this.state.orderBy?.dest !== ps.orderBy?.dest ||
+      this.state.filter?.value !== ps.filter?.value
+    ) {
+      if (tableChanged) this.setState(merge1("isLoaded", false, this.state));
+      this.fetchData(tableChanged ? 1 : pageNumber);
     }
   }
 
@@ -87,53 +100,115 @@ class AsyncTable extends React.Component<AsyncTableProps, List<AsyncType>> {
     // clean up
   }
 
-  render() {
-    const { error, isLoaded, items } = this.state;
+  onPage = (page: number) => {
+    const { data } = this.state;
+    switch (page) {
+      case -1:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber - 1, this.state)
+        );
+        break;
+      case 0:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber + 1, this.state)
+        );
+        break;
+      default:
+        if (page > 0)
+          this.setState(merge2("data", "pageNumber", page, this.state));
+        break;
+    }
+  };
+
+  onOrder = (field: string) => {
+    if (this.state.orderBy?.field !== field)
+      this.setState({ orderBy: { field, dest: "asc" } });
+    else
+      this.setState({
+        orderBy: {
+          field,
+          dest: this.state.orderBy?.dest === "asc" ? "desc" : "asc",
+        },
+      });
+  };
+
+  onStatusChange = (status: string) =>
+    this.setState({ filter: { field: "status", op: "eq", value: status } });
+
+  getLinkTo = (table: string) => (item: AsyncType) => (
+    <Link to={`/async/${table}/${item.id}`}>{item.id}</Link>
+  );
+
+  toDateTimeString = (fieldName: string) => (item: AsyncType) => (
+    <Date date={item[fieldName]} />
+  );
+
+  columnsList = () => {
     const {
-      match: { params }
+      match: { params },
+    } = this.props;
+
+    const tableName = params.table;
+    const columns: Column<AsyncType>[] = [
+      {
+        name: "cstatus",
+        fn: getStatusIcon,
+        label: "Status",
+      },
+      {
+        name: "cautoid",
+        fn: this.getLinkTo(tableName),
+        label: "Process ID",
+      },
+      {
+        name: "username",
+        label: "Username",
+      },
+      {
+        name: "submitted",
+        fn: this.toDateTimeString("submitted"),
+        label: "Submitted",
+      },
+      {
+        name: "started",
+        fn: this.toDateTimeString("started"),
+        label: "Started",
+      },
+      {
+        name: "completed",
+        fn: this.toDateTimeString("completed"),
+        label: "Completed",
+      },
+    ];
+
+    return columns;
+  };
+
+  render() {
+    const { error, isLoaded, data, orderBy, filter } = this.state;
+    const { items } = data;
+    const {
+      match: { params },
     } = this.props;
 
     if (error) {
-      return <div>Error: {error.message}</div>;
+      return <div>Error: {error}</div>;
     }
     if (!isLoaded) {
       return <div>Loading...</div>;
     } else {
       return (
-        <React.Fragment>
-          <Table bordered hover responsive>
-            <tr>
-              <th></th>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Username</th>
-              <th>Submitted</th>
-              <th>Started</th>
-              <th>Completed</th>
-            </tr>
-            {items.map(item => (
-              <tr>
-                <td>{getStatusIcon(item.status)}</td>
-                <td>
-                  <Link to={`/async/${params.table}/${item.id}`}>
-                    {item.id}
-                  </Link>
-                </td>
-                <td>{item.title}</td>
-                <td>{item.username}</td>
-                <td>
-                  <Date date={item.submitted} />
-                </td>
-                <td>
-                  <Date date={item.started} />
-                </td>
-                <td>
-                  <Date date={item.completed} />
-                </td>
-              </tr>
-            ))}
-          </Table>
-        </React.Fragment>
+        <SimpleTable<AsyncType>
+          columns={this.columnsList()}
+          data={data}
+          isLoaded={isLoaded}
+          error={error}
+          onPage={this.onPage}
+          onOrder={this.onOrder}
+          orderBy={orderBy}
+          onStatusChange={this.onStatusChange}
+          filter={filter}
+        />
       );
     }
   }

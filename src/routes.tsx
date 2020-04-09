@@ -39,25 +39,25 @@ const routes = [
   {
     path: "/autorun/:table/:id",
     exact: true,
-    name: "Autorun",
+    name: "Process Details",
     render: props => <AutorunDetails {...props} />
   },
   {
     path: "/async/:table/status/:status",
     exact: true,
-    name: "Autorun",
+    name: "",
     render: props => <AsyncTable {...props} />
   },
   {
     path: "/async/:table",
     exact: true,
-    name: "Autorun",
+    name: "Tasks",
     render: props => <AsyncTable {...props} />
   },
   {
     path: "/async/:table/:id",
     exact: true,
-    name: "Autorun",
+    name: "Task Details",
     render: props => <AsyncDetails {...props} />
   },
   {
@@ -69,7 +69,7 @@ const routes = [
   {
     path: "/procdef/:serverId",
     exact: true,
-    name: "ProcMon",
+    name: ":serverId",
     render: props => <ProcdefTable {...props} />
   },
   {
@@ -81,7 +81,7 @@ const routes = [
   {
     path: "/procstat/:serverId",
     exact: true,
-    name: "Running Processes",
+    name: ":serverId",
     render: props => <ProcstatTable {...props} />
   },
   {
@@ -93,7 +93,7 @@ const routes = [
   {
     path: "/emaintautolog/:cautoid",
     exact: true,
-    name: "Log",
+    name: ":cautoid",
     render: props => <EmaintAutoLogDetails {...props} />
   }
 ];

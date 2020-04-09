@@ -3,7 +3,7 @@ import Table from "react-bootstrap/Table";
 import { ProcStatType } from "../../db/definitions";
 import Date from "../../common/components/date";
 import Elapsed from "../../common/components/elapsed";
-import { List } from "../../common/interfaces";
+import { List, ListData } from "../../common/interfaces";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 
 interface ProctypeProps {
@@ -22,9 +22,12 @@ class ProcstatTable extends React.Component<PropsType, List<ProcStatType>> {
     this.state = {
       error: null,
       isLoaded: false,
-      items: [],
-      pageNumber: 1,
-      pageSize: 10
+      data: {
+        items: [],
+        pageNumber: 1,
+        totalPages: 0,
+        totalRecords: 0
+      }
     };
   }
 
@@ -37,12 +40,12 @@ class ProcstatTable extends React.Component<PropsType, List<ProcStatType>> {
 
   fetchData = (url: string) => {
     fetch(url)
-      .then<ProcStatType[]>(res => res.json())
+      .then<ListData<ProcStatType>>(res => res.json())
       .then(
         result => {
           this.setState({
             isLoaded: true,
-            items: result
+            data: result
           });
         },
         // Note: it's important to handle errors here
@@ -85,12 +88,13 @@ class ProcstatTable extends React.Component<PropsType, List<ProcStatType>> {
   }
 
   render() {
-    const { error, isLoaded, items } = this.state;
+    const { error, isLoaded, data } = this.state;
+    const { items } = data;
     const {
       match: { params }
     } = this.props;
     if (error) {
-      return <div>Error: {error.message}</div>;
+      return <div>Error: {error}</div>;
     }
     if (!isLoaded) {
       return <div>Loading...</div>;

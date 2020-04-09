@@ -19,7 +19,7 @@ appServersList.map(s => {
   nav.items.push({
     name: s,
     url: `/procdef/${s}`,
-    icon: "icon-ban"
+    icon: "icon-screen-desktop"
   });
 });
 
@@ -46,7 +46,7 @@ nav.items.push(
     icon: "icon-clock"
   },
   {
-    name: "Clean Ups",
+    name: "Maintenance",
     url: "/autorun/emaintauto",
     icon: "icon-shield"
   },

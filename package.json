@@ -7,12 +7,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-dev-server": "webpack-dev-server --open --mode development",
     "start-prod-server": "webpack-dev-server --open --mode production --config ./webpack.config.prod.js",
-    "build": "webpack --mode production --config ./webpack.config.prod.js --display-chunks",
+    "buildxxx": "webpack --mode production --config ./webpack.config.prod.js --display-chunks",
     "build-dev": "webpack --mode development --config ./webpack.config.js",
     "dev": "webpack-dev-server --config ./webpack.config.dev.js --open",
     "start": "concurrently \"npm run build-dev \" \"npm run start-dev-server\"",
     "start-prod": "concurrently \"npm run build \" \"npm run start-prod-server\"",
-    "build1": "react-scripts build"
+    "build": "react-scripts build"
   },
   "keywords": [],
   "author": "",
@@ -61,7 +61,7 @@
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-es2015": "^7.0.0-beta.53",
     "@babel/preset-react": "^7.8.3",
-    "@types/react": "^16.9.22",
+    "@types/react": "^16.9.29",
     "@types/react-router-dom": "^5.1.3",
     "awesome-typescript-loader": "^5.2.1",
     "babel-loader": "^8.0.6",

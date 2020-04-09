@@ -1,10 +1,14 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, RouteComponentProps, withRouter } from "react-router-dom";
 import { EmaintAutoType } from "../../db/definitions";
 import { getStatusIcon, getInterval } from "./functions";
-import { List } from "../../common/interfaces";
+import { List, Column, ListData } from "../../common/interfaces";
 import Date from "../../common/components/date";
-import { Pagination, PaginationItem, PaginationLink, Table } from "reactstrap";
+import SimpleTable from "../../common/components/simpletable";
+import { merge2, merge1 } from "../../common/merge";
+import api from "./api";
+// import localStorageImpl from "../../common/utils/local-storage";
+// import Token from "../../common/utils/token";
 
 interface AutorunTableProps {
   match: {
@@ -15,174 +19,203 @@ interface AutorunTableProps {
   };
 }
 
-class AutorunTable extends React.Component<
-  AutorunTableProps,
-  List<EmaintAutoType>
-> {
-  constructor(props: AutorunTableProps) {
+type PropType = AutorunTableProps & RouteComponentProps;
+
+class AutorunTable extends React.Component<PropType, List<EmaintAutoType>> {
+  constructor(props: PropType) {
     super(props);
     this.state = {
       error: null,
       isLoaded: false,
-      items: [],
-      pageNumber: 1,
-      pageSize: 10
+      data: {
+        items: [],
+        pageNumber: 1,
+        totalPages: 0,
+        totalRecords: 0,
+      },
+      orderBy: {
+        field: "dnextrun",
+        dest: "asc",
+      },
+      filter: props.match.params.status
+        ? { field: "status", op: "eq", value: props.match.params.status }
+        : undefined,
     };
   }
 
-  nextPage = () => this.setState({ pageNumber: this.state.pageNumber + 1 });
-  prevPage = () => this.setState({ pageNumber: this.state.pageNumber - 1 });
-  setPage = (page: number) => this.setState({ pageNumber: page });
+  onPage = (page: number) => {
+    const { data } = this.state;
+    switch (page) {
+      case -1:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber - 1, this.state)
+        );
+        break;
+      case 0:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber + 1, this.state)
+        );
+        break;
+      default:
+        if (page > 0)
+          this.setState(merge2("data", "pageNumber", page, this.state));
+        break;
+    }
+  };
 
-  fetchData = (url: string) => {
+  onOrder = (field: string) => {
+    if (this.state.orderBy?.field !== field)
+      this.setState({ orderBy: { field, dest: "asc" } });
+    else
+      this.setState({
+        orderBy: {
+          field,
+          dest: this.state.orderBy?.dest === "asc" ? "desc" : "asc",
+        },
+      });
+  };
+
+  onStatusChange = (status: string) =>
+    this.setState({ filter: { field: "status", op: "eq", value: status } });
+
+  fetchData = (page: number = 1) => {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
-    const { pageNumber, pageSize } = this.state;
 
-    const options = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: `status=${params.status ||
-        ""}&page=${pageNumber}&pageSize=${pageSize}`
-    };
+    const body = `status=${this.state.filter?.value || ""}&page=${page}&sort=${
+      this.state.orderBy?.field || ""
+    }&dest=${this.state.orderBy?.dest || ""}`;
 
-    fetch(url, options)
-      .then<EmaintAutoType[]>(res => res.json())
+    api()
+      .list(params.table, body)
       .then(
-        result => {
+        (result) => {
           this.setState({
             isLoaded: true,
-            items: result
+            data: result,
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        error => {
+        (error) => {
           this.setState({
             isLoaded: true,
-            error
+            error,
           });
         }
       );
   };
 
-  componentDidUpdate(np, ns) {
+  componentDidUpdate(pp, ps) {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
-    const prevTable = params.table;
-    const nextTable = np.match.params.table;
+    const nextTable = params.table;
+    const prevTable = pp.match.params.table;
+    const { pageNumber } = this.state.data;
+    const tableChanged = nextTable && nextTable !== prevTable;
     if (
-      (nextTable && nextTable !== prevTable) ||
-      this.state.pageNumber !== ns.pageNumber
+      tableChanged ||
+      pageNumber !== ps.data.pageNumber ||
+      this.state.orderBy?.field !== ps.orderBy?.field ||
+      this.state.orderBy?.dest !== ps.orderBy?.dest ||
+      this.state.filter?.value !== ps.filter?.value
     ) {
-      this.setState({ isLoaded: false });
-      this.fetchData(
-        `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${nextTable}`
-      );
+      if (tableChanged) this.setState(merge1("isLoaded", false, this.state));
+      this.fetchData(tableChanged ? 1 : pageNumber);
     }
   }
 
   componentDidMount() {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
-    this.fetchData(
-      `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}`
-    );
+    this.fetchData();
   }
 
   componentWillUnmount() {
     // clean up
   }
 
-  render() {
-    const { error, isLoaded, items, pageNumber } = this.state;
+  getLinkTo = (table: string) => (item: EmaintAutoType) => (
+    <Link to={`/autorun/${table}/${item.cautoid}`}>{item.cautoid}</Link>
+  );
+
+  toDateTimeString = (fieldName: string) => (item: EmaintAutoType) => (
+    <Date date={item[fieldName]} />
+  );
+
+  columnsList = () => {
     const {
-      match: { params }
+      match: { params },
+    } = this.props;
+
+    const tableName = params.table;
+    const columns: Column<EmaintAutoType>[] = [
+      {
+        name: "status",
+        fn: getStatusIcon,
+        label: "Status",
+      },
+      {
+        name: "cautoid",
+        fn: this.getLinkTo(tableName),
+        label: "Process ID",
+      },
+      {
+        name: "cdescrip",
+        label: "Description",
+      },
+      {
+        name: "dlastrun",
+        fn: this.toDateTimeString("dlastrun"),
+        label: "Last Run",
+      },
+      {
+        name: "dnextrun",
+        fn: this.toDateTimeString("dnextrun"),
+        label: "Next Run",
+      },
+      {
+        name: "cinterval",
+        fn: getInterval,
+        label: "Run Inteval",
+      },
+      {
+        name: "logerrmsg",
+        label: "Last Error Message",
+      },
+    ];
+
+    return columns;
+  };
+
+  render() {
+    const { error, isLoaded, data, orderBy, filter } = this.state;
+    const {
+      match: { params },
     } = this.props;
 
     if (error) {
-      return <div>Error: {error.message}</div>;
+      return <div>Error: {error}</div>;
     }
     if (!isLoaded) {
       return <div>Loading...</div>;
     } else {
       return (
-        <React.Fragment>
-          <Table bordered hover responsive>
-            <tr>
-              <th>Status</th>
-              <th>Process ID</th>
-              <th>Description</th>
-              <th>Last Run</th>
-              <th>Next Run</th>
-              <th>Run Inteval</th>
-              <th>Last Error Message</th>
-            </tr>
-            {items.map(item => (
-              <tr>
-                <td>{getStatusIcon(item.status)}</td>
-                <td>
-                  <Link to={`/autorun/${params.table}/${item.cautoid}`}>
-                    {item.cautoid}
-                  </Link>
-                </td>
-                <td>{item.cdescrip}</td>
-                <td>
-                  <Date date={item.dlastrun} />
-                </td>
-                <td>
-                  <Date date={item.dnextrun} />
-                </td>
-                <td>{getInterval(item.nevery, item.cinterval)}</td>
-                <td>{item.message}</td>
-              </tr>
-            ))}
-          </Table>
-          <Pagination>
-            <PaginationItem>
-              <PaginationLink
-                previous
-                tag="button"
-                onClick={() => this.prevPage()}
-              ></PaginationLink>
-            </PaginationItem>
-            <PaginationItem active={pageNumber === 1}>
-              <PaginationLink tag="button" onClick={() => this.setPage(1)}>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem active={pageNumber === 2}>
-              <PaginationLink tag="button" onClick={() => this.setPage(2)}>
-                2
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem active={pageNumber === 3}>
-              <PaginationLink tag="button" onClick={() => this.setPage(3)}>
-                3
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem active={pageNumber === 4}>
-              <PaginationLink tag="button" onClick={() => this.setPage(4)}>
-                4
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem active={pageNumber === 5}>
-              <PaginationLink tag="button" onClick={() => this.setPage(5)}>
-                5
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem onClick={() => this.nextPage()}>
-              <PaginationLink next tag="button"></PaginationLink>
-            </PaginationItem>
-          </Pagination>
-        </React.Fragment>
+        <SimpleTable<EmaintAutoType>
+          columns={this.columnsList()}
+          data={data}
+          isLoaded={isLoaded}
+          error={error}
+          onPage={this.onPage}
+          onOrder={this.onOrder}
+          orderBy={orderBy}
+          onStatusChange={this.onStatusChange}
+          filter={filter}
+        />
       );
     }
   }
 }
 
-export default AutorunTable;
+export default withRouter(AutorunTable);

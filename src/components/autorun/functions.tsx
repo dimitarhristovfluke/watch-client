@@ -1,31 +1,27 @@
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCog,
-  faExclamationTriangle,
-  faCheckCircle,
-  faTimesCircle,
-  faQuestionCircle,
-  faBan
-} from "@fortawesome/free-solid-svg-icons";
+import { EmaintAutoType } from "../../db/definitions";
 
-export const getInterval = (nEvery: number, cInterval: string) => {
-  switch (cInterval) {
+export const getInterval = (item: EmaintAutoType) => {
+  switch (item.cinterval) {
     case "MIN":
-      return nEvery + " min" + (nEvery > 1 ? "s" : "");
+      return <span>{item.nevery + " min" + (item.nevery > 1 ? "s" : "")}</span>;
     case "HRS":
-      return nEvery + " hour" + (nEvery > 1 ? "s" : "");
+      return (
+        <span>{item.nevery + " hour" + (item.nevery > 1 ? "s" : "")}</span>
+      );
     case "DAYS":
-      return nEvery + " day" + (nEvery > 1 ? "s" : "");
+      return <span>{item.nevery + " day" + (item.nevery > 1 ? "s" : "")}</span>;
     case "MONTH":
-      return nEvery + " month" + (nEvery > 1 ? "s" : "");
+      return (
+        <span>{item.nevery + " month" + (item.nevery > 1 ? "s" : "")}</span>
+      );
     default:
-      return nEvery + " " + cInterval;
+      return <span>{item.nevery + " " + item.cinterval}</span>;
   }
 };
 
-export const getStatusIcon = (status: string) => {
-  switch (status) {
+export const getStatusIcon = (item: EmaintAutoType) => {
+  switch (item.status) {
     case "RUNNING":
       return <span className="badge badge-primary">RUNNING</span>;
     case "PENDING":

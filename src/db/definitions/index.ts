@@ -36,7 +36,7 @@ export interface EmaintAutoType {
   ccode: string;
   crunid: string;
   status: string;
-  message: string;
+  logerrmsg: string;
   cserverid: string;
 }
 
@@ -67,6 +67,7 @@ export interface AsyncType {
   inputdata: string;
   returndata: string;
   properties: string;
+  cstatus: string;
 }
 
 export type AsyncStatus =

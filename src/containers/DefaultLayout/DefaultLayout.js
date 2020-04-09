@@ -12,7 +12,7 @@ import {
   AppSidebarForm,
   AppSidebarHeader,
   AppSidebarMinimizer,
-  AppBreadcrumb2 as AppBreadcrumb,
+  AppBreadcrumb,
   AppSidebarNav2 as AppSidebarNav
 } from "@coreui/react";
 // sidebar nav config
@@ -32,6 +32,7 @@ const DefaultHeader = React.lazy(() => import("./DefaultHeader"));
           </AppAside>
            */
 }
+
 class DefaultLayout extends Component {
   loading = () => (
     <div className="animated fadeIn pt-1 text-center">Loading...</div>

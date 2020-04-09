@@ -3,7 +3,7 @@ import Table from "react-bootstrap/Table";
 
 import { ProcDefType } from "../../db/definitions";
 import { getInterval } from "./function";
-import { List } from "../../common/interfaces";
+import { List, ListData } from "../../common/interfaces";
 import { Row, Col, Button } from "react-bootstrap";
 import { withRouter, RouteComponentProps, useHistory } from "react-router-dom";
 
@@ -23,9 +23,12 @@ class ProcdefTable extends React.Component<PropsType, List<ProcDefType>> {
     this.state = {
       error: null,
       isLoaded: false,
-      items: [],
-      pageNumber: 1,
-      pageSize: 10
+      data: {
+        items: [],
+        pageNumber: 1,
+        totalPages: 0,
+        totalRecords: 0
+      }
     };
   }
 
@@ -39,12 +42,12 @@ class ProcdefTable extends React.Component<PropsType, List<ProcDefType>> {
 
   fetchData = (url: string) => {
     fetch(url)
-      .then<ProcDefType[]>(res => res.json())
+      .then<ListData<ProcDefType>>(res => res.json())
       .then(
         result => {
           this.setState({
             isLoaded: true,
-            items: result
+            data: result
           });
         },
         // Note: it's important to handle errors here
@@ -87,13 +90,14 @@ class ProcdefTable extends React.Component<PropsType, List<ProcDefType>> {
   }
 
   render() {
-    const { error, isLoaded, items } = this.state;
+    const { error, isLoaded, data } = this.state;
+    const { items } = data;
     const {
       match: { params }
     } = this.props;
 
     if (error) {
-      return <div>Error: {error.message}</div>;
+      return <div>Error: {error}</div>;
     }
     if (!isLoaded) {
       return <div>Loading...</div>;

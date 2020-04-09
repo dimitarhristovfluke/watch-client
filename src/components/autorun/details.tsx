@@ -28,10 +28,11 @@ import {
   InputGroupButtonDropdown,
   InputGroupText,
   Label,
-  Row
+  Row,
 } from "reactstrap";
 
 import "./index.css";
+import api from "./api";
 
 interface AutorunDetailsProps {
   match: {
@@ -54,27 +55,28 @@ class AutorunDetails extends React.Component<
       error: null,
       isLoaded: false,
       item: null,
-      mode: "read"
+      mode: "read",
     };
   }
 
-  fetchData = (url: string) => {
-    fetch(url)
-      .then(res => res.json())
+  fetchData = (id?: string) => {
+    const {
+      match: { params },
+    } = this.props;
+
+    api()
+      .get(params.table, id || params.id)
       .then(
-        result => {
+        (result) => {
           this.setState({
             isLoaded: true,
-            item: result
+            item: result,
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        error => {
+        (error) => {
           this.setState({
             isLoaded: true,
-            error
+            error,
           });
         }
       );
@@ -82,25 +84,15 @@ class AutorunDetails extends React.Component<
 
   componentWillUpdate(np) {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
     const prevId = params.id;
     const nextId = np.match.params.id;
-    if (nextId && nextId !== prevId) {
-      this.fetchData(
-        `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}/${nextId}`
-      );
-    }
+    if (nextId && nextId !== prevId) this.fetchData(nextId);
   }
 
   componentDidMount() {
-    const {
-      match: { params }
-    } = this.props;
-
-    this.fetchData(
-      `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}/${params.id}`
-    );
+    this.fetchData();
   }
 
   componentWillUnmount() {
@@ -109,16 +101,30 @@ class AutorunDetails extends React.Component<
 
   restartProcess = () => {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
-    this.fetchData(
-      `${process.env.REACT_APP_API_ROOT_PATH}/autorun/${params.table}/${params.id}/start`
-    );
+
+    api()
+      .start(params.table, params.id)
+      .then(
+        (result) => {
+          this.setState({
+            isLoaded: true,
+            item: result,
+          });
+        },
+        (error) => {
+          this.setState({
+            isLoaded: true,
+            error,
+          });
+        }
+      );
   };
 
   viewErrorsLog = () => {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
 
     this.props.history.push(`/emaintautolog/${params.id}`);
@@ -161,11 +167,11 @@ class AutorunDetails extends React.Component<
   render() {
     const { error, isLoaded, item, mode } = this.state;
     const {
-      match: { params }
+      match: { params },
     } = this.props;
 
     if (error) {
-      return <div>Error: {error.message}</div>;
+      return <div>Error: {error}</div>;
     }
 
     if (!isLoaded) {
@@ -190,7 +196,7 @@ class AutorunDetails extends React.Component<
                       <Label>Status</Label>
                     </Col>
                     <Col xs="12" md="9">
-                      {getStatusIcon(item.status)}
+                      {getStatusIcon(item)}
                     </Col>
                   </FormGroup>
                   <FormGroup row>
@@ -230,7 +236,7 @@ class AutorunDetails extends React.Component<
                       <Label htmlFor="text-input">Running Interval</Label>
                     </Col>
                     <Col xs="12" md="9">
-                      {getInterval(item.nevery, item.cinterval)}
+                      {getInterval(item)}
                     </Col>
                   </FormGroup>
                   <FormGroup row>
@@ -246,7 +252,7 @@ class AutorunDetails extends React.Component<
                       <Label htmlFor="text-input">Message</Label>
                     </Col>
                     <Col xs="12" md="9">
-                      {item.message}
+                      {item.logerrmsg}
                     </Col>
                   </FormGroup>
                 </Form>

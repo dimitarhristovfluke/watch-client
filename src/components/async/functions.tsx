@@ -6,11 +6,12 @@ import {
   faBan,
   faTimesCircle,
   faQuestionCircle,
-  faExclamationTriangle
+  faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
+import { AsyncType } from "../../db/definitions";
 
-export const getStatusIcon = (status: string) => {
-  switch (status) {
+export const getStatusIcon = (item: AsyncType) => {
+  switch (item.cstatus) {
     case "RUNNING":
       return <span className="badge badge-primary">RUNNING</span>;
     case "PENDING":

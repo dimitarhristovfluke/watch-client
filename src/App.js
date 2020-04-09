@@ -15,20 +15,7 @@ const loading = () => (
 const DefaultLayout = lazy(() => import("./containers/DefaultLayout"));
 
 // Pages
-const NotFound = lazy(() => import("./components/not-found"));
-const ProcstatTable = lazy(() => import("./components/procstat/table"));
-const ProcdefTable = lazy(() => import("./components/procdef/table"));
-const AutorunTable = lazy(() => import("./components/autorun/table"));
-const AutorunDetails = lazy(() => import("./components/autorun/details"));
-const Dashboard = lazy(() => import("./components/dashboard"));
-const AsyncTable = lazy(() => import("./components/async/table"));
-const AsyncDetails = lazy(() => import("./components/async/details"));
-const EmaintAutoLogTable = lazy(() =>
-  import("./components/emaintautolog/table")
-);
-const EmaintAutoLogDetails = lazy(() =>
-  import("./components/emaintautolog/details")
-);
+const Login = React.lazy(() => import("./views/Pages/Login/Login"));
 
 class App extends Component {
   render() {
@@ -39,6 +26,12 @@ class App extends Component {
       >
         <React.Suspense fallback={loading()}>
           <Switch>
+            <Route
+              exact
+              path="/login"
+              name="Login Page"
+              render={props => <Login {...props} />}
+            />
             <Route
               path="/"
               name="Home"

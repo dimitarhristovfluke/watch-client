@@ -5,7 +5,11 @@ import * as R from "ramda";
 import { EmaintAutoLogType } from "../../db/definitions";
 import "../../env";
 import { getStatusIcon } from "./functions";
-import { List } from "../../common/interfaces";
+import { List, Column } from "../../common/interfaces";
+import { merge2 } from "../../common/merge";
+import Date from "../../common/components/date";
+import api from "./api";
+import SimpleTable from "../../common/components/simpletable";
 
 interface EmaintAutoLogTableProps {
   match: {
@@ -24,88 +28,167 @@ class EmaintAutoLogDetails extends React.Component<
     this.state = {
       error: null,
       isLoaded: false,
-      items: [],
-      pageNumber: 1,
-      pageSize: 10
+      data: {
+        items: [],
+        pageNumber: 1,
+        totalPages: 0,
+        totalRecords: 0,
+      },
+      orderBy: {
+        field: "timestamp",
+        dest: "desc",
+      },
     };
   }
 
-  componentDidMount() {
-    const {
-      match: { params }
-    } = this.props;
+  fetchData = (id: string, page: number = 1) => {
+    const body = `&page=${page}&sort=${this.state.orderBy?.field || ""}&dest=${
+      this.state.orderBy?.dest || ""
+    }`;
 
-    fetch(
-      `${process.env.REACT_APP_API_ROOT_PATH}/emaintautolog/${params.cautoid}`
-    )
-      .then<EmaintAutoLogType[]>(res => res.json())
+    api()
+      .get(id, body)
       .then(
-        result => {
-          const sortedResults = R.reverse(
-            R.sortBy(item => item.timestamp, result)
-          );
+        (result) => {
           this.setState({
             isLoaded: true,
-            items: sortedResults
+            data: result,
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        error => {
+        (error) => {
           this.setState({
             isLoaded: true,
-            error
+            error,
           });
         }
       );
+  };
+
+  componentDidMount() {
+    const {
+      match: { params },
+    } = this.props;
+
+    this.fetchData(params.cautoid);
   }
 
   componentWillUnmount() {
     // clean up
   }
 
-  render() {
-    const { error, isLoaded, items } = this.state;
+  componentDidUpdate(pp, ps) {
+    const {
+      match: { params },
+    } = this.props;
 
+    const { pageNumber } = this.state.data;
+    if (
+      pageNumber !== ps.data.pageNumber ||
+      this.state.orderBy?.field !== ps.orderBy?.field ||
+      this.state.orderBy?.dest !== ps.orderBy?.dest ||
+      this.state.filter?.value !== ps.filter?.value
+    ) {
+      this.fetchData(params.cautoid, pageNumber);
+    }
+  }
+
+  toDateTimeString = (fieldName: string) => (item: EmaintAutoLogType) => (
+    <Date date={item[fieldName]} />
+  );
+
+  onPage = (page: number) => {
+    const { data } = this.state;
+    switch (page) {
+      case -1:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber - 1, this.state)
+        );
+        break;
+      case 0:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber + 1, this.state)
+        );
+        break;
+      default:
+        if (page > 0)
+          this.setState(merge2("data", "pageNumber", page, this.state));
+        break;
+    }
+  };
+
+  onOrder = (field: string) => {
+    if (this.state.orderBy?.field !== field)
+      this.setState({ orderBy: { field, dest: "asc" } });
+    else
+      this.setState({
+        orderBy: {
+          field,
+          dest: this.state.orderBy?.dest === "asc" ? "desc" : "asc",
+        },
+      });
+  };
+
+  columnsList = () => {
+    const columns: Column<EmaintAutoLogType>[] = [
+      {
+        name: "status",
+        fn: getStatusIcon,
+        label: "Status",
+      },
+      {
+        name: "timestamp",
+        fn: this.toDateTimeString("timestamp"),
+        label: "Date/time",
+      },
+      {
+        name: "cautoid",
+        label: "Process ID",
+      },
+      {
+        name: "cautodesc",
+        label: "Command",
+      },
+      {
+        name: "cprogram",
+        label: "Program Executed",
+      },
+      {
+        name: "nlineno",
+        label: "Line No",
+      },
+      {
+        name: "cerrormsg",
+        label: "Error Message",
+      },
+      {
+        name: "crunid",
+        label: "Run ID",
+      },
+    ];
+
+    return columns;
+  };
+
+  render() {
+    const { error, isLoaded, data, orderBy } = this.state;
+    const { items } = data;
     if (error) {
-      return <div>Error: {error.message}</div>;
+      return <div>Error: {error}</div>;
     }
 
     if (!isLoaded) {
       return <div>Loading...</div>;
     } else {
       return (
-        <React.Fragment>
-          <Table bordered hover responsive>
-            <tr>
-              <th></th>
-              <th>Date/Time</th>
-              <th>Process ID</th>
-              <th>Command</th>
-              <th>Program Executed</th>
-              <th>Line No</th>
-              <th>Error Message</th>
-              <th>Run ID</th>
-            </tr>
-            {items.map(item => (
-              <tr>
-                <td>{getStatusIcon(item)}</td>
-                <td>
-                  <Moment format={process.env.REACT_APP_dateTimeFormat}>
-                    {item.timestamp}
-                  </Moment>
-                </td>
-                <td>{item.cautoid}</td>
-                <td>{item.cautodesc}</td>
-                <td>{item.cprogram}</td>
-                <td>{item.nlineno}</td>
-                <td>{item.cerrormsg}</td>
-                <td>{item.crunid}</td>
-              </tr>
-            ))}
-          </Table>
-        </React.Fragment>
+        <SimpleTable<EmaintAutoLogType>
+          columns={this.columnsList()}
+          data={data}
+          isLoaded={isLoaded}
+          error={error}
+          onPage={this.onPage}
+          onOrder={this.onOrder}
+          orderBy={orderBy}
+        />
       );
     }
   }

@@ -15,8 +15,9 @@ import {
   Form,
   FormGroup,
   Label,
-  Row
+  Row,
 } from "reactstrap";
+import api from "./api";
 
 interface AsyncDetailsProps {
   match: {
@@ -37,27 +38,28 @@ class AsyncDetails extends React.Component<
       error: null,
       isLoaded: false,
       item: null,
-      mode: "read"
+      mode: "read",
     };
   }
 
-  fetchData = (url: string) => {
-    fetch(url)
-      .then<AsyncType>(res => res.json())
+  fetchData = (id?: string) => {
+    const {
+      match: { params },
+    } = this.props;
+
+    api()
+      .get(params.table, id || params.id)
       .then(
-        result => {
+        (result) => {
           this.setState({
             isLoaded: true,
-            item: result
+            item: result,
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        error => {
+        (error) => {
           this.setState({
             isLoaded: true,
-            error
+            error,
           });
         }
       );
@@ -65,25 +67,21 @@ class AsyncDetails extends React.Component<
 
   componentWillUpdate(np) {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
     const prevId = params.id;
     const nextId = np.match.params.id;
     if (nextId && nextId !== prevId) {
-      this.fetchData(
-        `${process.env.REACT_APP_API_ROOT_PATH}/async/${params.table}/${nextId}`
-      );
+      this.fetchData(nextId);
     }
   }
 
   componentDidMount() {
     const {
-      match: { params }
+      match: { params },
     } = this.props;
 
-    this.fetchData(
-      `${process.env.REACT_APP_API_ROOT_PATH}/async/${params.table}/${params.id}`
-    );
+    this.fetchData(params.id);
   }
 
   componentWillUnmount() {
@@ -93,11 +91,11 @@ class AsyncDetails extends React.Component<
   render() {
     const { error, isLoaded, item } = this.state;
     const {
-      match: { params }
+      match: { params },
     } = this.props;
 
     if (error) {
-      return <div>Error: {error.message}</div>;
+      return <div>Error: {error}</div>;
     }
 
     if (!isLoaded) {
@@ -122,7 +120,7 @@ class AsyncDetails extends React.Component<
                       <Label>Status</Label>
                     </Col>
                     <Col xs="12" md="9">
-                      {getStatusIcon(item.status)}
+                      {getStatusIcon(item)}
                     </Col>
                   </FormGroup>
                   <FormGroup row>
@@ -211,6 +209,14 @@ class AsyncDetails extends React.Component<
                     </Col>
                     <Col xs="12" md="9">
                       {item.properties}
+                    </Col>
+                  </FormGroup>
+                  <FormGroup row>
+                    <Col md="3">
+                      <Label htmlFor="text-input">Message</Label>
+                    </Col>
+                    <Col xs="12" md="9">
+                      {item.status}
                     </Col>
                   </FormGroup>
                 </Form>
