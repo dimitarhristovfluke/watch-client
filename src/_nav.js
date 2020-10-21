@@ -9,9 +9,7 @@ nav.items.push(
   },
   {
     title: true,
-    name: "procmon",
-    url: "/procdef",
-    icon: "icon-star"
+    name: "PROCMON"
   }
 );
 

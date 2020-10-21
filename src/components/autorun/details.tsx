@@ -252,7 +252,7 @@ class AutorunDetails extends React.Component<
                       <Label htmlFor="text-input">Message</Label>
                     </Col>
                     <Col xs="12" md="9">
-                      {item.logerrmsg}
+                      <pre>{item.logerrmsg}</pre>
                     </Col>
                   </FormGroup>
                 </Form>

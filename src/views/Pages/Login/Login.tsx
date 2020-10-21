@@ -91,7 +91,9 @@ class Login extends React.Component<PropTypes, LoginState> {
           console.log(error);
         }
       )
-      .catch((error) => {});
+      .catch((error) => {
+        this.setState({ loginFailed: true });
+      });
   };
   render() {
     const { username, password, loginFailed } = this.state;

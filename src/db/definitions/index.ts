@@ -8,7 +8,7 @@ export interface ProcDefType {
   lastcheck: Date;
   cserverid: string;
   procmon: boolean;
-  procctrol: boolean;
+  procctrl: boolean;
   lrecycle: boolean;
   nrecevery: number;
   crecintrvl: string;

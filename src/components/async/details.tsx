@@ -213,7 +213,7 @@ class AsyncDetails extends React.Component<
                   </FormGroup>
                   <FormGroup row>
                     <Col md="3">
-                      <Label htmlFor="text-input">Message</Label>
+                      <Label htmlFor="text-input"><pre>Message</pre></Label>
                     </Col>
                     <Col xs="12" md="9">
                       {item.status}

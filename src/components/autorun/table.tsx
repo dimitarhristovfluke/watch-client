@@ -2,7 +2,7 @@ import React from "react";
 import { Link, RouteComponentProps, withRouter } from "react-router-dom";
 import { EmaintAutoType } from "../../db/definitions";
 import { getStatusIcon, getInterval } from "./functions";
-import { List, Column, ListData } from "../../common/interfaces";
+import { List, Column } from "../../common/interfaces";
 import Date from "../../common/components/date";
 import SimpleTable from "../../common/components/simpletable";
 import { merge2, merge1 } from "../../common/merge";
@@ -126,9 +126,6 @@ class AutorunTable extends React.Component<PropType, List<EmaintAutoType>> {
   }
 
   componentDidMount() {
-    const {
-      match: { params },
-    } = this.props;
     this.fetchData();
   }
 

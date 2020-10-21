@@ -45,10 +45,9 @@ export const healthStatus = (item: ProcessInfo) => {
     return <span style={{ color: "red" }}>Interrupted</span>;
   if (item.errors > 0 && item.success === 0)
     return <span style={{ color: "salmon" }}>Bad</span>;
-  if (item.errors > 0) return <span style={{ color: "orange" }}>Good</span>;
-  if (item.success > 0)
-    return <span style={{ color: "green" }}>Excellent</span>;
-  return <span style={{ color: "gray" }}>Unknown</span>;
+  if (item.errors > 0)
+      return <span style={{ color: "orange" }}>Good</span>;
+  return <span style={{ color: "green" }}>Excellent</span>;
 };
 
 export const procmonHealthStatus = (item: ProcessInfo) => {
@@ -64,9 +63,8 @@ export const procmonOveralHalthStatus = (items: ProcessInfo[]) => {
     return <span style={{ color: "salmon" }}>Bad</span>;
   if (R.find((i) => i.errors > 0, items))
     return <span style={{ color: "orange" }}>Good</span>;
-  if (R.find((i) => i.success > 0, items))
-    return <span style={{ color: "green" }}>Excellent</span>;
-  return <span style={{ color: "gray" }}>Unknown</span>;
+
+  return <span style={{ color: "green" }}>Excellent</span>;
 };
 
 export const stalledText = (item: ProcessInfo, url: string) => {

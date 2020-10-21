@@ -1,16 +1,17 @@
 import React from "react";
 import Table from "react-bootstrap/Table";
-
 import { ProcDefType } from "../../db/definitions";
 import { getInterval } from "./function";
-import { List, ListData } from "../../common/interfaces";
-import { Row, Col, Button } from "react-bootstrap";
-import { withRouter, RouteComponentProps, useHistory } from "react-router-dom";
+import { List } from "../../common/interfaces";
+import { Row, Col} from "react-bootstrap";
+import { withRouter, RouteComponentProps } from "react-router-dom";
+import api from "./api";
+import { merge2 } from "../../common/merge";
 
 interface ProcdefProps {
   match: {
     params: {
-      serverId: string;
+      serverid: string;
     };
   };
 }
@@ -37,57 +38,78 @@ class ProcdefTable extends React.Component<PropsType, List<ProcDefType>> {
       match: { params }
     } = this.props;
 
-    this.props.history.push(`/procstat/${params.serverId}`);
+    this.props.history.push(`/procdef/${params.serverid}`);
   };
 
-  fetchData = (url: string) => {
-    fetch(url)
-      .then<ListData<ProcDefType>>(res => res.json())
+  onPage = (page: number) => {
+    const { data } = this.state;
+    switch (page) {
+      case -1:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber - 1, this.state)
+        );
+        break;
+      case 0:
+        this.setState(
+          merge2("data", "pageNumber", data.pageNumber + 1, this.state)
+        );
+        break;
+      default:
+        if (page > 0)
+          this.setState(merge2("data", "pageNumber", page, this.state));
+        break;
+    }
+  };
+
+  onOrder = (field: string) => {
+    if (this.state.orderBy?.field !== field)
+      this.setState({ orderBy: { field, dest: "asc" } });
+    else
+      this.setState({
+        orderBy: {
+          field,
+          dest: this.state.orderBy?.dest === "asc" ? "desc" : "asc",
+        },
+      });
+  };
+
+  onStatusChange = (status: string) =>
+    this.setState({ filter: { field: "status", op: "eq", value: status } });
+  fetchData = (page: number = 1) => {
+    const {
+      match: { params },
+    } = this.props;
+
+    const body = `status=${this.state.filter?.value || ""}&page=${page}&sort=${
+      this.state.orderBy?.field || ""
+    }&dest=${this.state.orderBy?.dest || ""}`;
+
+    api()
+      .list(params.serverid, body)
       .then(
-        result => {
+        (result) => {
           this.setState({
             isLoaded: true,
-            data: result
+            data: result,
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
-        error => {
+        (error) => {
           this.setState({
             isLoaded: true,
-            error
+            error,
           });
         }
       );
   };
 
   componentDidMount() {
-    const {
-      match: { params }
-    } = this.props;
-
-    this.fetchData(
-      `${process.env.REACT_APP_API_ROOT_PATH}/procdef/${params.serverId}`
-    );
-  }
-
-  componentWillUpdate(np) {
-    const {
-      match: { params }
-    } = this.props;
-    const prevServer = params.serverId;
-    const nextServer = np.match.params.serverId;
-    if (nextServer && prevServer !== nextServer) {
-      this.fetchData(
-        `${process.env.REACT_APP_API_ROOT_PATH}/procdef/${nextServer}`
-      );
-    }
+    this.fetchData();
   }
 
   componentWillUnmount() {
     // clean up
   }
+
 
   render() {
     const { error, isLoaded, data } = this.state;
@@ -126,6 +148,7 @@ class ProcdefTable extends React.Component<PropsType, List<ProcDefType>> {
                   <th>Controlled by ProcMon?</th>
                   <th>Running / Required</th>
                   <th>Recycle Period</th>
+                  <th>Server Id</th>
                 </tr>
                 {items.map(item => (
                   <tr>
@@ -133,8 +156,8 @@ class ProcdefTable extends React.Component<PropsType, List<ProcDefType>> {
                     <td>{item.procname}</td>
                     <td>{item.taskdesc}</td>
                     <td>{item.proccmdlin}</td>
-                    <td>{item.procmon}</td>
-                    <td>{item.procctrol}</td>
+                    <td>{item.procmon.toString()}</td>
+                    <td>{item.procctrl.toString()}</td>
                     <td>{`${item.proccount} / ${item.procmin}`}</td>
                     <td>
                       {item.lrecycle

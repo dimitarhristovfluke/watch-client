@@ -32,9 +32,8 @@ const healthStatus = (item: ProcessInfo) => {
   if (item.errors > 0 && item.success === 0)
     return <span style={{ color: "salmon" }}>Bad</span>;
   if (item.errors > 0) return <span style={{ color: "orange" }}>Good</span>;
-  if (item.success > 0)
-    return <span style={{ color: "green" }}>Excellent</span>;
-  return <span style={{ color: "gray" }}>Unknown</span>;
+
+  return <span style={{ color: "green" }}>Excellent</span>;
 };
 
 const stalledText = (item: ProcessInfo, url: string) => {

@@ -67,9 +67,9 @@ const routes = [
     render: props => <ProcdefTable {...props} />
   },
   {
-    path: "/procdef/:serverId",
+    path: "/procdef/:serverid",
     exact: true,
-    name: ":serverId",
+    name: ":serverid",
     render: props => <ProcdefTable {...props} />
   },
   {
@@ -79,9 +79,9 @@ const routes = [
     render: props => <ProcstatTable {...props} />
   },
   {
-    path: "/procstat/:serverId",
+    path: "/procstat/:serverid",
     exact: true,
-    name: ":serverId",
+    name: ":serverid",
     render: props => <ProcstatTable {...props} />
   },
   {
