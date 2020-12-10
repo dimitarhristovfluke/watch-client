@@ -1,6 +1,10 @@
 Installation guide taken from:
 https://www.codementor.io/@rajjeet/step-by-step-create-a-react-project-from-scratch-11s9skvnxv
 
+### Build
+
+> npm run build
+
 ### Step 1: Initialize NPM (Node Package Manager)
 
 > cd client
@@ -20,4 +24,5 @@ We can use the --y to get the basic configuration and scafolding for our Node pr
 > type NUL > webpack.config.js
 
 ### Step 4: Install React-Router and React-Router-dom
+
 > npm install react-router react-router-dom
